@@ -56,8 +56,14 @@ cp -aL "$PIXBUF_LOADERS"/libpixbufloader-svg.so "$LIBDIR/gdk-pixbuf-2.0/2.10.0/l
 grep -c '^"@LOADERS@' "$LIBDIR/gdk-pixbuf-2.0/2.10.0/loaders.cache.in" | sed 's/^/pixbuf loaders: /'
 
 # GSettings schemas: GTK aborts when it asks for a schema that is not installed
-# (the file chooser, for one). Found through XDG_DATA_DIRS, so no extra variable.
+# (the file chooser, for one); libadwaita reads org.gnome.desktop.interface
+# (package gsettings-desktop-schemas) when there is no settings portal. Found
+# through XDG_DATA_DIRS, so no extra variable.
 mkdir -p "$APPDIR/usr/share/glib-2.0/schemas"
+for schema in org.gtk.gtk4.Settings.FileChooser.gschema.xml org.gnome.desktop.enums.xml \
+    org.gnome.desktop.interface.gschema.xml; do
+    [ -e "/usr/share/glib-2.0/schemas/$schema" ] || { echo "::error::$schema not found (gtk4, gsettings-desktop-schemas)" >&2; exit 1; }
+done
 cp /usr/share/glib-2.0/schemas/org.gtk.gtk4.*.xml /usr/share/glib-2.0/schemas/org.gnome.desktop.enums.xml \
     /usr/share/glib-2.0/schemas/org.gnome.desktop.interface.gschema.xml "$APPDIR/usr/share/glib-2.0/schemas/"
 glib-compile-schemas "$APPDIR/usr/share/glib-2.0/schemas"
